@@ -9,7 +9,11 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.LinkedList;
+import java.util.PriorityQueue;
+import java.util.Queue;
 import java.util.Random;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import javax.swing.JButton;
@@ -20,7 +24,7 @@ import javax.swing.JSlider;
 import javax.swing.SwingUtilities;
 import javax.swing.Timer;
 import javax.swing.border.LineBorder;
-
+	
 public class Gui {
 	
 	static int DistanzRotGrün;
@@ -28,11 +32,13 @@ public class Gui {
 	 public static boolean[] visited;
 	 public static TreeMap<Integer,ArrayList<Integer>> Liste2;
 	 public static boolean NichtMöglich=false;
+	 public static Stack<Integer> stack;
 	
 		static int iGrün,jGrün,nGrün;
 		static int iRot,jRot,nRot;
 		int RandomSpeed=100;
 		static int dijkstraspeed=5;
+		static int bfsspeed;
 		public JFrame frame;
 		public static JButton[][] Button;
 		public JButton ZielButton;
@@ -40,10 +46,16 @@ public class Gui {
 		public JButton RandomAuffüllen;
 		public JSlider SchwarzSpeed;
 		public static JSlider DijkstraSpeed;
+		public JSlider DFSSpeed;
+		public static JSlider BFSSpeed;
 		public JButton StartButton;
 		public JButton DijkstraButton;
 		public JButton SchwarzEntfernen;
 		public JButton BlauEntfernen;
+		public JButton PinkEntfernen;
+		public JButton DFSButton;
+		public JButton BFSButton; 
+		
 		private boolean mousePressed;
 		public JLabel ilabel;
 		public JLabel jlabel;
@@ -58,9 +70,13 @@ public class Gui {
 		// frame setzen mit Farben und Textfields
 		void setGUI() {
 
-			
 			frame = new JFrame("SHORTEST-PATH-FINDER");
 			
+			BFSSpeed = new JSlider(JSlider.HORIZONTAL,1/2,25,8);
+			BFSSpeed.setBounds(650, 570, 120, 30);
+			
+			DFSSpeed = new JSlider(JSlider.HORIZONTAL,1/2,25,10);
+			DFSSpeed.setBounds(530, 570, 120, 30);
 			
 			DijkstraSpeed = new JSlider(JSlider.HORIZONTAL,1/2,9,5);
 			DijkstraSpeed.setBounds(410, 570, 120, 30);
@@ -83,7 +99,7 @@ public class Gui {
 								if(e.getSource()==Button[i][j]) {
 									ilabel.setText("I="+i);
 									jlabel.setText("J="+j);
-									nlabel.setText("N="+DykstraAlgorithmus.Umrechnung(i, j));
+									nlabel.setText("N="+Matrix.Umrechnung(i, j));
 								}
 								}
 								}
@@ -153,7 +169,7 @@ public class Gui {
 			});
 			
 			SchwarzEntfernen= new JButton("BLACK");
-			SchwarzEntfernen.setBounds(180, 570, 80, 30);
+			SchwarzEntfernen.setBounds(180, 580, 80, 30);
 			SchwarzEntfernen.addActionListener(new ActionListener() {
 
 				@Override
@@ -163,22 +179,33 @@ public class Gui {
 				}
 				
 			});
+			PinkEntfernen = new JButton("PINK");
+			PinkEntfernen.setBounds(180, 640, 80, 30);
+			PinkEntfernen.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+					PinkEntfernen();
+					Werkseinstellungen();
+				}
+				
+			});
 			
 			BlauEntfernen= new JButton("BLAU");
-			BlauEntfernen.setBounds(180, 630, 80, 30);
+			BlauEntfernen.setBounds(180, 610, 80, 30);
 			BlauEntfernen.addActionListener(new ActionListener() {
 
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					BlauEntfernen();
-					
+					Werkseinstellungen();
 				}
 				
 				
 			});
 			
 			ClearButton = new JButton("clear");
-			ClearButton.setBounds(180, 600, 80, 30);
+			ClearButton.setBounds(180, 550, 80, 30);
 			ClearButton.addActionListener(new ActionListener() {
 
 				@Override
@@ -221,6 +248,7 @@ public class Gui {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 
+					NichtMöglich=false;
 					BlauEntfernen();
 					for(int i=0;i<Button.length;i++) {
 							if(Button[i][0].getBackground().equals(Color.GREEN)) {
@@ -236,9 +264,14 @@ public class Gui {
 							}
 						}
 					}
-					 nGrün = DykstraAlgorithmus.Umrechnung(iGrün, jGrün);
-					 nRot  = DykstraAlgorithmus.Umrechnung(iRot, jRot);
-					DykstraAlgorithmus dijkstra = new DykstraAlgorithmus(Button);
+					 nGrün = Matrix.Umrechnung(iGrün, jGrün);
+					 nRot  = Matrix.Umrechnung(iRot, jRot);
+					 if(nRot==0) {
+							JOptionPane.showMessageDialog(null, "Legen sie ein Ziel fest", "Kein Ziel", JOptionPane.ERROR_MESSAGE);
+							Button[iGrün][jGrün].setBackground(Color.GREEN);
+							return;
+						}
+					Matrix dijkstra = new Matrix(Button);
 						int[][] result=dijkstra.adjazenzmatrix.clone();
 						int[][] result1=result.clone();
 						
@@ -258,7 +291,69 @@ public class Gui {
 				}				
 				
 			});
+			
+			BFSButton = new JButton ("BFS-Button");
+			BFSButton.setBounds(650, 600, 120, 30);
+			BFSButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					
+					NichtMöglich=false;
+					PinkEntfernen();
+					for(int i=0;i<Button.length;i++) {
+						if(Button[i][0].getBackground().equals(Color.GREEN)) {
+							iGrün=i;
+							jGrün=0;
+							Button[i][0].setBackground(Color.WHITE);
+					}
+					for(int j=Button[0].length-6;j<Button[0].length;j++) {
+						if(Button[i][j].getBackground().equals(Color.RED)) {
+							iRot=i;
+							jRot=j;
+							Button[i][j].setBackground(Color.WHITE);
+						}
+					}
+				}
+					 nGrün = Matrix.Umrechnung(iGrün, jGrün);
+					 nRot  = Matrix.Umrechnung(iRot, jRot);
+						Matrix BFS = new Matrix(Button);
+						BreadthFirstSearch(BFS.adjazenzmatrix,nGrün);
+				}
 				
+			});
+			
+			DFSButton = new JButton("DFS-Button");
+			DFSButton.setBounds(530, 600, 120, 30);
+			DFSButton.addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent arg0) {
+
+			
+					PinkEntfernen();
+					for(int i=0;i<Button.length;i++) {
+						if(Button[i][0].getBackground().equals(Color.GREEN)) {
+							iGrün=i;
+							jGrün=0;
+							Button[i][0].setBackground(Color.WHITE);
+					}
+					for(int j=Button[0].length-6;j<Button[0].length;j++) {
+						if(Button[i][j].getBackground().equals(Color.RED)) {
+							iRot=i;
+							jRot=j;
+							Button[i][j].setBackground(Color.WHITE);
+						}
+					}
+				}
+				 nGrün = Matrix.Umrechnung(iGrün, jGrün);
+				 nRot  = Matrix.Umrechnung(iRot, jRot);
+					Matrix DFS = new Matrix(Button);
+					DepthFirstSearch(DFS.adjazenzmatrix,nGrün);
+					
+				}
+				
+			});	
 			
 			
 			
@@ -275,6 +370,11 @@ public class Gui {
 			frame.add(SchwarzEntfernen);
 			frame.add(BlauEntfernen);
 			frame.add(DijkstraSpeed);
+			frame.add(DFSButton);
+			frame.add(PinkEntfernen);
+			frame.add(DFSSpeed);
+			frame.add(BFSButton);
+			frame.add(BFSSpeed);
 			}
 			frame.setSize(900, 700);
 			center();
@@ -340,7 +440,7 @@ public class Gui {
 		private void BlauEntfernen() {
 			for (int i = 0; i < Button.length; i++) {
 				for (int j = 0; j < Button[0].length; j++) {
-					if(!(Button[i][j].getBackground().equals(Color.GREEN)|| Button[i][j].getBackground().equals(Color.RED)||Button[i][j].getBackground().equals(Color.BLACK) )){
+					if(!(Button[i][j].getBackground().equals(Color.GREEN)|| Button[i][j].getBackground().equals(Color.RED)||Button[i][j].getBackground().equals(Color.BLACK)||Button[i][j].getBackground().equals(Color.PINK) )){
 				Button[i][j].setBackground(Color.WHITE);
 				Button[i][j].setBorder(new LineBorder(Color.BLACK));
 				}
@@ -352,7 +452,7 @@ public class Gui {
 			
 			for (int i = 0; i < Button.length; i++) {
 				for (int j = 0; j < Button[0].length; j++) {
-					if(!(Button[i][j].getBackground().equals(Color.GREEN)|| Button[i][j].getBackground().equals(Color.RED)||Button[i][j].getBackground().equals(Color.BLUE))){
+					if(!(Button[i][j].getBackground().equals(Color.GREEN)|| Button[i][j].getBackground().equals(Color.RED)||Button[i][j].getBackground().equals(Color.BLUE)||Button[i][j].getBackground().equals(Color.PINK))){
 				Button[i][j].setBackground(Color.WHITE);
 				Button[i][j].setBorder(new LineBorder(Color.BLACK));
 				}
@@ -369,7 +469,7 @@ public class Gui {
 			Button[Höhe][Breite+1].setBackground(Color.BLACK);
 			ilabel.setText("I="+Höhe);
 			jlabel.setText("J="+Breite);
-			nlabel.setText("N="+DykstraAlgorithmus.Umrechnung(Höhe, Breite));
+			nlabel.setText("N="+Matrix.Umrechnung(Höhe, Breite));
 
 			
 		}
@@ -397,6 +497,17 @@ public class Gui {
 				}
 				}
 		}
+		private static void PinkEntfernen() {
+			
+			for (int i = 0; i < Button.length; i++) {
+				for (int j = 0; j < Button[0].length; j++) {
+					if(Button[i][j].getBackground().equals(Color.PINK)){
+				Button[i][j].setBackground(Color.WHITE);
+				Button[i][j].setBorder(new LineBorder(Color.BLACK));
+				}
+				}
+			}						
+		}
 		
 
 public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
@@ -423,12 +534,19 @@ public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
 	@Override
 	public void actionPerformed(ActionEvent arg0) {
 		
+		if(NichtMöglich) {
+			Matrix dijkstra= new Matrix(Button);
+			BreadthFirstSearch(dijkstra.adjazenzmatrix,nGrün);	
+			((Timer)arg0.getSource()).stop();
+			}else {
+
+		
 		for(int i=0; i<adjazenzmatrix.length;i++) {
 		if(visited[i]) {
 			if(visited[nRot])fertig=true;
 			
-			if(Button[DykstraAlgorithmus.UmrechungIndex1(i)][i%58].getBackground()!=Color.BLACK) {
-			Button[DykstraAlgorithmus.UmrechungIndex1(i)][i%58].setBackground(Color.CYAN);
+			if(Button[Matrix.UmrechungIndex1(i)][i%58].getBackground()!=Color.BLACK) {
+			Button[Matrix.UmrechungIndex1(i)][i%58].setBackground(Color.CYAN);
 			}
 		}
 		}
@@ -440,16 +558,14 @@ public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
 		if(fertig) {
 			
 			CyanWeg();
-			if(NichtMöglich) {
-				JOptionPane.showMessageDialog(null, "Das Ziel kann nicht erreicht werden", "Nicht erreichbar", JOptionPane.ERROR_MESSAGE);
-			}else {
+			
 			DistanzRotGrün = distance[nRot];
 			Vorgänger[nGrün]=Integer.MIN_VALUE;
 			
-			ArrayList<Integer> Ergebnis = new ArrayList<>(DykstraAlgorithmus.Rute(Vorgänger, nRot));
+			ArrayList<Integer> Ergebnis = new ArrayList<>(Matrix.Rute(Vorgänger, nRot));
 			for(Integer i: Ergebnis) {
-				Button[DykstraAlgorithmus.UmrechungIndex1(i)][i%58].setBackground(Color.BLUE);
-			}}
+				Button[Matrix.UmrechungIndex1(i)][i%58].setBackground(Color.BLUE);
+			}
 			Button[iGrün][0].setBackground(Color.GREEN);
 			Button[iRot][jRot].setBackground(Color.RED);
 			
@@ -458,7 +574,7 @@ public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
 		
 		}
 		
-		int minVertex = DykstraAlgorithmus.findMinVertex(distance,visited);
+		int minVertex = Matrix.findMinVertex(distance,visited);
 		visited[minVertex]=true;
 		//Iterationen, um die kleinste Distanz festzulegen, in Tabellenform wäre dies horizontal
 		for(int j = 0;j<adjazenzmatrix.length;j++) {
@@ -484,7 +600,7 @@ public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
 						Vorgänger[j]=nGrün;
 						continue;
 					}
-					int n=DykstraAlgorithmus.TreeIntoArrayList(Liste2).get(i-1);
+					int n=Matrix.TreeIntoArrayList(Liste2).get(i-1);
 					Vorgänger[j]=n;
 //					System.out.print(java.util.Arrays.toString(Vorgänger)+"\n");
 					// j gibt die tatsächlichen Knoten wieder und i gibt nur an, bei dem wie vielten Knoten wir sind aber nicht an welcher Position dieser ist.
@@ -496,7 +612,7 @@ public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
 		Button[iRot][jRot].setBackground(Color.RED);
 		i++;
 	}
-	
+	}
 		});timer.start();
 
 		});
@@ -531,13 +647,12 @@ public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
 	
 			for(int i=0;i<adjazenzmatrix.length-1;i++) {
 
-				int minVertex = DykstraAlgorithmus.findMinVertex(distance,visited);
+				int minVertex = Matrix.findMinVertex(distance,visited);
 				visited[minVertex]=true;
 				//Iterationen, um die kleinste Distanz festzulegen, in Tabellenform wäre dies horizontal
 				for(int j = 0;j<adjazenzmatrix.length;j++) {
 					if(adjazenzmatrix[minVertex][j]!=0 && !visited[j] && distance[minVertex] !=Integer.MAX_VALUE) {
 						int newDist = distance[minVertex] + adjazenzmatrix[minVertex][j];
-//						System.out.print(distance[minVertex] +  "  " + adjazenzmatrix[minVertex][j]+ "  " + newDist + "  " + distance[j] + " i="+i+" j="+j +" "+java.util.Arrays.toString(Vorgänger)+" "+Liste2+"\n");
 						if(newDist<distance[j]) {
 							distance[j]= newDist;
 						}
@@ -548,8 +663,105 @@ public static void Dijkstra1(int[][] adjazenzmatrix,int nGrün,int nRot) {
 			return DistanzRotGrün;
 		}
 
-		//Wählt den Knoten mit der geringsten Distanz aus. 
+		
+		private void DepthFirstSearch(int[][] adjazenzmatrix,int nGrün) {
+			
+			stack = new Stack<Integer>();
+			visited = new boolean[adjazenzmatrix.length];
+			for(int i=0;i<visited.length;i++) {
+				visited[i]=false;
+			}
+		
+			visited[nGrün]=true;
+			stack.add(nGrün);
+			SwingUtilities.invokeLater(() -> {
 
+				
+				Timer timer = new Timer(DFSSpeed.getValue(), new ActionListener() {
+
+					int node = stack.pop();
+					@Override
+					public void actionPerformed(ActionEvent e) {
+					
+						for(int i=0;i<visited.length;i++) {
+							if(visited[i]) {
+							Button[Matrix.UmrechungIndex1(i)][i%58].setBackground(Color.PINK);
+							}	
+						}Button[iGrün][jGrün].setBackground(Color.GREEN);
+						
+						for(int i=0; i<visited.length;i++) {
+							
+							if(adjazenzmatrix[node][i]!=0 && !visited[i]) {
+								visited[i]=true;
+								stack.add(i);
+							}
+						}
+						if(stack.isEmpty()) {
+							((Timer)e.getSource()).stop();
+						}else {
+							node=stack.pop();
+						}
+						
+					}
+					
+				});
+				timer.start();
+				
+			});
+				
+		}
+		
+
+		public static void BreadthFirstSearch(int[][] adjazenzmatrix,int nGrün){
+			Queue<Integer> queue = new LinkedList<Integer>();
+			boolean[] abgeschlossen = new boolean[adjazenzmatrix.length];
+			visited = new boolean[adjazenzmatrix.length];
+			for(int i=0;i<visited.length;i++) {
+				visited[i]=false;
+				abgeschlossen[i]=false;
+			}
+			visited[nGrün]=true;
+			queue.add(nGrün);
+			
+			 bfsspeed = BFSSpeed.getValue();
+			if(NichtMöglich)bfsspeed=DijkstraSpeed.getValue();
+			SwingUtilities.invokeLater(() -> {
+
+				
+				
+						
+				Timer timer = new Timer(bfsspeed, new ActionListener() {
+
+					
+					int node = queue.poll();
+					@Override
+					public void actionPerformed(ActionEvent arg0) {
+		
+						for(int i=0;i<visited.length;i++) {
+							if(visited[i]) {
+							Button[Matrix.UmrechungIndex1(i)][i%58].setBackground(Color.PINK);
+							}	
+						}Button[iGrün][jGrün].setBackground(Color.GREEN);
+						
+						
+						for(int i=0; i<visited.length;i++) {
+							if(adjazenzmatrix[node][i]!=0 && !visited[i]) {
+								visited[i]=true;
+								queue.add(i);
+							}
+						}
+						if(queue.isEmpty()) {
+							((Timer)arg0.getSource()).stop();
+						}else {
+							
+						node=queue.poll();
+						}
+					}
+			});timer.start();
+				
+			});	
+			
+		}
 		
 		
 		

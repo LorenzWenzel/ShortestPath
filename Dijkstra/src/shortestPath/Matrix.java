@@ -2,11 +2,12 @@ package shortestPath;
 
 import java.awt.Color;
 import java.util.ArrayList;
+import java.util.Stack;
 import java.util.TreeMap;
 
 import javax.swing.JButton;
 
-public class DykstraAlgorithmus {
+public class Matrix {
 JButton[][] Buttons;
 int[][] adjazenzmatrix;
 public static int iGrün,jGrün,nGrün;
@@ -16,7 +17,7 @@ static int DistanzRotGrün;
  static int[] Vorgänger;
  public static boolean[] visited;
 //35*58= 2030 Knoten.
-public DykstraAlgorithmus(JButton[][] Buttons) {
+public Matrix(JButton[][] Buttons) {
 
 	
 	this.Buttons=Buttons;
@@ -125,6 +126,7 @@ public static ArrayList<Integer> TreeIntoArrayList(TreeMap<Integer,ArrayList<Int
 	
 	return Liste1;
 }
+
 
 
 
