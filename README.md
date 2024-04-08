@@ -1,6 +1,13 @@
 # ShortestPath
 Visualisierung des kürzesten Weges in einem Graphen durch Animation des DijkstraAlgorithmus. 
 
+## Demonstration:
+
+
+https://github.com/LorenzWenzel/ShortestPath/assets/73563833/699c15a8-e40a-412d-b735-249cd28c2e28
+
+
+
 ## shortest path: 
 ![image](https://github.com/LorenzWenzel/ShortestPath/assets/73563833/0777de05-ab89-4b08-ba38-2d21b749193f)
 
