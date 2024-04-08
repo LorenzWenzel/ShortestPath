@@ -10,3 +10,6 @@ In derselben Weise wird nun der DepthFirstSearch-Algorithmus in Form des DFS-But
 
 Weitere Ziele des Projekts sind die Implementierung anderer Algorithmen, wie eine möglichst geschickte Visualisierung der starken Zusammenhangskomponenten. 
 In naher Zukunft wird eine ausführliche Dokumentation und das Zusammenfassen und Vereinfachen vieler Methoden im Quellcode.
+
+
+![image](https://github.com/LorenzWenzel/ShortestPath/assets/73563833/0777de05-ab89-4b08-ba38-2d21b749193f)
