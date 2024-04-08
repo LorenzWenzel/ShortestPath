@@ -1,7 +1,7 @@
 # ShortestPath
 Visualisierung des kürzesten Weges in einem Graphen durch Animation des DijkstraAlgorithmus. 
 
-## Demonstration:
+## Depth-First-Search, Breadth-Frist-Search, Dijkstra Demonstration:
 
 
 
