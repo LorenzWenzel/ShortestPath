@@ -5,7 +5,9 @@ Visualisierung des kürzesten Weges in einem Graphen durch Animation des Dijkstr
 
 
 
-https://github.com/LorenzWenzel/ShortestPath/assets/73563833/98de38a5-5a3e-4995-9c77-8ab59ab3d922
+
+https://github.com/LorenzWenzel/ShortestPath/assets/73563833/56935272-2596-4b81-89aa-b18699a51fe7
+
 
 
 
